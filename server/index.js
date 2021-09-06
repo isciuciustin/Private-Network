@@ -4,31 +4,34 @@ const http = require('http');
 const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
-var users = {};
-var cnt = 0;
 
+var users = [];
+var cnt = 0;
 app.get("/", (req, res) => {
     res.sendFile('index.html', { root: '../client/' });
 })
 
-app.get('/:url', (req, res) => {
+app.get('/room/:url', (req, res) => {
     const url = req.params.url;
-    console.log(url);
     res.sendFile('room.html', { root: '../client/' });
+
     io.on('connection', (socket) => {
-        console.log('a user connected');
-        cnt++;
-        users[socket.id] = cnt;
-        socket.on('disconnect', () => {
-            cnt--;
-            console.log('user disconnected');
-        });
-    });
+            cnt++;
+            users.push(socket.id);
+            console.log(cnt + " users on");
+            socket.on('disconnect', () => {
+                cnt--;
+                console.log(cnt + " users remained");
+            });
+    })
     io.on('connection', (socket) => {
-        socket.on('private message', (anotherSocketId, msg)=> {
-            console.log(url + " " + msg);
-            socket.to(anotherSocketId).emit("private message", socket.id, msg);
-        });
+            socket.on('chat message', (msg, room) => {
+
+                io.to(room).emit("chat message", `{${msg}}`);
+            });
+            socket.on('join-room', (room) => {
+                socket.join(room);
+            })
     });
 });
 
