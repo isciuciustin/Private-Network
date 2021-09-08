@@ -15,6 +15,7 @@ const corsOptions ={
 app.use(cors(corsOptions))
 
 var mysql = require('mysql');
+const { url } = require('inspector');
 
 var con = mysql.createConnection({
     host: "localhost",
@@ -26,7 +27,6 @@ var con = mysql.createConnection({
 
 var users = {};
 var cnt = 0;
-var url = ""
 app.get("/", (req, res) => {
     res.sendFile('index.html', { root: '../client/' });
 })
@@ -35,8 +35,14 @@ app.get('/room/:url', (req, res) => {
     const url = req.params.url;
     res.sendFile('room.html', { root: '../client/' });
 });
-app.get('/api', (req, res) => {
-    res.send('text');
+app.get('/api/:url', (req, res) => {
+    var url = req.params.url;
+    url = url.substr(1, url.length - 2);
+    const select = "SELECT * FROM ??";
+    con.query(select, url, (request, response) => {
+        res.send(response);
+    })
+    
 });
 
 io.on('connection', (socket) => {
@@ -67,20 +73,20 @@ io.on('connection', (socket) => {
     });
 })
 io.on('connection', (socket) => {
-    socket.on('chat message', (msg, room) => {
-
-        io.to(room).emit("chat message", `{${msg}}`);
+    socket.on('chat message', (data, ind , room) => {
+        io.to(room).emit("chat message", data, ind);
     });
     socket.on('join-room', (room) => {
         socket.join(room);
-        const key = new NodeRSA({ b: 512 });
-        const private = key.exportKey('private');
-        const public = key.exportKey('public');
+        var key = new NodeRSA({ b: 1024 });
+        var private = key.exportKey('private');
+        var public = key.exportKey('public');
+        io.to(room).emit("private", private);
         const sql = "CREATE TABLE IF NOT EXISTS ?? (ind int, userid varchar(250),public varchar(500));";
         con.query(sql, [room], (req, res) => {
-            const count = "SELECT * FROM ??";
+            const count = "SELECT MAX(ind) AS max FROM ??";
             con.query(count, room, (request, response) => {
-                let counter = response.length + 1;
+                var counter = response[0].max + 1;
                 const insert = "INSERT INTO ?? (ind, userid , public) VALUES(?,?,?)";
                 con.query(insert, [room, counter, socket.id, public], (request, response) => {
                     console.log('Insert')
@@ -89,7 +95,7 @@ io.on('connection', (socket) => {
             })
 
         })
-        io.to(room).emit("private", private);
+        
     })
 });
 
