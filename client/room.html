@@ -11,69 +11,118 @@
         integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
         crossorigin="anonymous"></script>
     <script src="http://code.jquery.com/jquery-1.8.3.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsencrypt/2.3.1/jsencrypt.min.js" integrity="sha512-zDvrqenA0eFJZCxBsryzUZcvihvNlEXbteMv62yRxdhR4s7K1aaz+LjsRyfk6M+YJLyAJEuuquIAI8I8GgLC8A==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsencrypt/2.3.1/jsencrypt.min.js"
+        integrity="sha512-zDvrqenA0eFJZCxBsryzUZcvihvNlEXbteMv62yRxdhR4s7K1aaz+LjsRyfk6M+YJLyAJEuuquIAI8I8GgLC8A=="
+        crossorigin="anonymous"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script type="text/javascript"></script>
+    <style>
+        body {
+            margin: 0;
+            padding-bottom: 3rem;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        #div {
+            background: rgba(0, 0, 0, 0.15);
+            padding: 0.25rem;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            height: 3rem;
+            box-sizing: border-box;
+            backdrop-filter: blur(10px);
+        }
+
+        #input {
+            border: none;
+            padding: 0 1rem;
+            flex-grow: 1;
+            border-radius: 2rem;
+            margin: 0.25rem;
+        }
+
+        #input:focus {
+            outline: none;
+        }
+
+        #div>button {
+            background: #333;
+            border: none;
+            padding: 0 1rem;
+            margin: 0.25rem;
+            border-radius: 3px;
+            outline: none;
+            color: #fff;
+        }
+
+        #messages {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        #messages>li {
+            padding: 0.5rem 1rem;
+        }
+
+        #messages>li:nth-child(odd) {
+            background: #efefef;
+        }
+    </style>
     <script>
         var socket = io();
-
+        var messages = document.getElementById('messages');
         let url = window.location.href.split('/')[4];
         url = url.substr(3, url.length);
         socket.on('connect', () => {
+            var item = document.createElement('li');
+            item.textContent = "Welcome on Private Network!";
+            document.getElementById('messages').appendChild(item);
+            window.scrollTo(0, document.body.scrollHeight);
             socket.emit('join-room', url);
+        })
+        socket.on('new', (id) => {
+            var item = document.createElement('li');
+            item.textContent = `{${id}} has join the chat!`;
+            document.getElementById('messages').appendChild(item);
+            window.scrollTo(0, document.body.scrollHeight);
+        })
+        socket.on('leave', (id) => {
+            var item = document.createElement('li');
+            item.textContent = `{${id}} has left the chat!`;
+            document.getElementById('messages').appendChild(item);
+            window.scrollTo(0, document.body.scrollHeight);
         })
         socket.on('private', (key) => {
             sessionStorage.setItem(socket.id, key);
         })
+
         function submit() {
-            axios.get(`http://localhost:8080/api/{${url}}`)
+            axios.get(`http://v7cwcmmbui5saqsqqfynii7j6fmn3ddlmmt5ca5bjdzumy34wdgbkzyd.onion/api/{${url}}`)
                 .then(response => {
                     var msg = document.getElementById('input').value;
                     document.getElementById('input').value = "";
-                    var data = [];
                     var ind = 0;
-                    console.log("socket " + socket.id);
                     for (let i = 0; i < response.data.length; i++) {
-                        if (response.data[i].userid != socket.id) {
-                            var encrypt = new JSEncrypt();
-                            encrypt.setPublicKey(response.data[i].public);
-                            console.log(response.data[i].public);
-                            var encrypted = encrypt.encrypt(msg);
-                            var obj = { userid: "", msg: "" };
-                            obj.userid = response.data[i].userid;
-                            obj.msg = encrypted;
-                            data.push(obj);
-                        }
-                        else {
+                        if (response.data[i].userid == socket.id) {
                             ind = response.data[i].ind;
                         }
                     }
-                    socket.emit('chat message', data, ind, url);
+                    socket.emit('chat message', msg, ind, url);
                 })
                 .catch(error => console.error(error));
 
 
         }
-        socket.on('chat message', (data, ind) => {
-            console.log(data);
-            for (let i = 0; i < data.length; i++) {
-                if (socket.id == data[i].userid) {
-                    console.log(socket.id);
-                    var msg = data[i].msg;
-                    var private = sessionStorage.getItem(socket.id);
-                    console.log(msg);
-                    var decrypt = new JSEncrypt();
-                    decrypt.setPrivateKey(private);
-                    var uncrypted = decrypt.decrypt(msg);
-                    console.log(uncrypted);
-                    var item = document.createElement('li');
-                    item.textContent = ind + " " + uncrypted;
-                    document.getElementById('messages').appendChild(item);
-                    window.scrollTo(0, document.body.scrollHeight);
-                }
-            }
-
+        socket.on('chat message', (msg, id) => {
+            var item = document.createElement('li');
+            item.textContent = id + " " + msg;
+            document.getElementById('messages').appendChild(item);
+            window.scrollTo(0, document.body.scrollHeight);
         });
 
     </script>
@@ -81,9 +130,15 @@
 </head>
 
 <body>
-    <ul id="messages"></ul>
-    <input id="input" type="text" autocomplete="off" />
-    <button type="submit" onclick="submit()">Send</button>
+    <div class="container-fluid">
+        <ul id="messages"></ul>
+        <div id="div">
+            <input id="input" autocomplete="off" />
+            <button onclick="submit()">Send</button>
+        </div>
+
+    </div>
+
 </body>
 
 </html>

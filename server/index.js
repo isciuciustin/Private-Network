@@ -24,7 +24,7 @@ var con = mysql.createConnection({
     database: "db"
 });
 
-
+var index = {};
 var users = {};
 var cnt = 0;
 app.get("/", (req, res) => {
@@ -51,6 +51,7 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
         cnt--;
         let room = users[socket.id];
+        socket.to(room).broadcast.emit('leave', index[socket.id]);
         const count = "SELECT * FROM ??";
         con.query(count, room, (request, response) => {
             if (response) {
@@ -87,6 +88,8 @@ io.on('connection', (socket) => {
             const count = "SELECT MAX(ind) AS max FROM ??";
             con.query(count, room, (request, response) => {
                 var counter = response[0].max + 1;
+                index[socket.id] = counter;
+                socket.to(room).broadcast.emit("new", counter);
                 const insert = "INSERT INTO ?? (ind, userid , public) VALUES(?,?,?)";
                 con.query(insert, [room, counter, socket.id, public], (request, response) => {
                     console.log('Insert')
