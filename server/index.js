@@ -4,12 +4,11 @@ const http = require('http');
 const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
-const NodeRSA = require('node-rsa');
 const cors = require("cors");
-const corsOptions ={
-   origin:'*', 
-   credentials:true,            
-   optionSuccessStatus:200,
+const corsOptions = {
+    origin: '*',
+    credentials: true,
+    optionSuccessStatus: 200,
 }
 
 app.use(cors(corsOptions))
@@ -42,7 +41,7 @@ app.get('/api/:url', (req, res) => {
     con.query(select, url, (request, response) => {
         res.send(response);
     })
-    
+
 });
 
 io.on('connection', (socket) => {
@@ -74,23 +73,19 @@ io.on('connection', (socket) => {
     });
 })
 io.on('connection', (socket) => {
-    socket.on('chat message', (data, ind , room) => {
-        io.to(room).emit("chat message", data, ind);
+    socket.on('chat message', (id, data, room) => {
+        io.to(room).emit("chat message", id, data);
     });
-    socket.on('join-room', (room) => {
+    socket.on('join-room', (room, public) => {
         socket.join(room);
-        var key = new NodeRSA({ b: 1024 });
-        var private = key.exportKey('private');
-        var public = key.exportKey('public');
-        io.to(room).emit("private", private);
-        const sql = "CREATE TABLE IF NOT EXISTS ?? (ind int, userid varchar(250),public varchar(500));";
+        const sql = "CREATE TABLE IF NOT EXISTS ?? (id int, userid varchar(250), public varchar(1000));";
         con.query(sql, [room], (req, res) => {
-            const count = "SELECT MAX(ind) AS max FROM ??";
+            const count = "SELECT MAX(id) AS max FROM ??;";
             con.query(count, room, (request, response) => {
                 var counter = response[0].max + 1;
                 index[socket.id] = counter;
                 socket.to(room).broadcast.emit("new", counter);
-                const insert = "INSERT INTO ?? (ind, userid , public) VALUES(?,?,?)";
+                const insert = "INSERT INTO ?? (id, userid , public) VALUES(?,?,?);";
                 con.query(insert, [room, counter, socket.id, public], (request, response) => {
                     console.log('Insert')
                     users[socket.id] = room;
@@ -98,7 +93,7 @@ io.on('connection', (socket) => {
             })
 
         })
-        
+
     })
 });
 
