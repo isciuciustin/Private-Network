@@ -96,27 +96,6 @@
                 });
                 sessionStorage.setItem(socket.id, privateKey);
                 socket.emit('join-room', url, publicKey);
-                const publicKey2 = await openpgp.readKey({ armoredKey: publicKey });
-                var passphrase = '123456';
-                const privateKey2 = await openpgp.decryptKey({
-                    privateKey: await openpgp.readPrivateKey({ armoredKey: privateKey }),
-                    passphrase
-                });
-                const encrypted = await openpgp.encrypt({
-                    message: await openpgp.createMessage({ text: 'Iustin este BO$$' }), // input as Message object
-                    encryptionKeys: publicKey2,
-                    signingKeys: privateKey2 // optional
-                });
-
-
-                const message = await openpgp.readMessage({
-                    armoredMessage: encrypted
-                });
-                const { data: decrypted, signatures } = await openpgp.decrypt({
-                    message,
-                    verificationKeys: publicKey2, // optional
-                    decryptionKeys: privateKey2
-                });
             })();
         })
         socket.on('new', (id) => {
