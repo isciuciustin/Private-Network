@@ -13,18 +13,23 @@
     <title>Private Network</title>
 </head>
 
-<body style="background-color: #262626; color: white;">
-    <nav class="navbar navbar-dark bg-dark shadow  rounded">
+<body >
+    <nav class="navbar shadow  rounded">
         <div class="container-fluid ">
-            <a class="navbar-brand mx-auto" href="#">Private Network</a>
+            <a class="navbar-brand mx-auto" href="#" style="color: black;">Private Network</a>
         </div>
     </nav>
-    <div class="container-fluid mx-auto" style="margin-top: 10%; display:flex; justify-content: center;
-    align-items: center;">
-            <h4>Generate a chat room
-                <button class="btn btn-outline-danger" onclick="generate()">Generate</button>
-            </h4>
-    </div>
+    <div class="py-4"></div>
+    <div class="px-4 py-5 my-5 text-center">
+        <!-- <img class="d-block mx-auto mb-4" src="../assets/brand/bootstrap-logo.svg" alt="" width="72" height="57"> -->
+        <h1 class="display-5 fw-bold">Speak Freely</h1>
+        <div class="col-lg-6 mx-auto">
+          <p class="lead mb-4">One of the best instant messaging app designed for TOR browser with unexpected focus on privacy</p>
+          <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+            <button type="button" class="btn btn-outline-dark px-4 gap-3" onclick="generate()">Use Private Network</button>
+          </div>
+        </div>
+      </div>
     <script src="/socket.io/socket.io.js"></script>
 </body>
 
@@ -44,7 +49,7 @@
         return result;
     }
     function generate(){
-        let r = generateString(15);
+        let r = generateString(50);
         window.location.href = "/room/" + r;
     }
 </script>
