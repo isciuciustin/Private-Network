@@ -76,6 +76,20 @@
         }
     </style>
     <script>
+        const names = {
+            1 : 'Chris',
+            2 : 'Jack',
+            3 : 'Mark',
+            4 : 'Jeff',
+            5 : 'Bill',
+            6 : 'Alice',
+            7 : 'Justin',
+            8 : 'Bob',
+            9 : 'Alex',
+            10 : 'Elon',
+            11 : 'Warren',
+            12 : 'Daniel'
+        }
         var socket = io();
         var messages = document.getElementById('messages');
         let url = window.location.href.split('/')[4];
@@ -100,13 +114,13 @@
         })
         socket.on('new', (id) => {
             var item = document.createElement('li');
-            item.textContent = `{${id}} has join the chat!`;
+            item.textContent = `{${names[id]}} has join the chat!`;
             document.getElementById('messages').appendChild(item);
             window.scrollTo(0, document.body.scrollHeight);
         })
         socket.on('leave', (id) => {
             var item = document.createElement('li');
-            item.textContent = `{${id}} has left the chat!`;
+            item.textContent = `{${names[id]}} has left the chat!`;
             document.getElementById('messages').appendChild(item);
             window.scrollTo(0, document.body.scrollHeight);
         })
@@ -137,7 +151,7 @@
                             }
                         }
                         var item = document.createElement('li');
-                        item.textContent = `{${id}} ` + msg;
+                        item.textContent = `{${names[id]}} ` + msg;
                         document.getElementById('messages').appendChild(item);
                         window.scrollTo(0, document.body.scrollHeight);
                         socket.emit('chat message', id, data, url);
@@ -168,7 +182,7 @@
                     message,
                     decryptionKeys: privateKey2
                 });
-                item.textContent = '{' + id + '}' + " " + decrypted;
+                item.textContent = '{' + names[id] + '}' + " " + decrypted;
                 document.getElementById('messages').appendChild(item);
                 window.scrollTo(0, document.body.scrollHeight);
             })();

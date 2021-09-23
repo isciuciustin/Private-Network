@@ -14,7 +14,6 @@ const corsOptions = {
 app.use(cors(corsOptions))
 
 var mysql = require('mysql');
-const { url } = require('inspector');
 
 var con = mysql.createConnection({
     host: "localhost",
